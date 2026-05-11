@@ -7,7 +7,10 @@ import ItemPreview from "./pages/item/ItemPreview";
 import PostItem    from "./pages/item/PostItem";
 import ProfilePage from "./pages/profile/ProfilePage";
 import ProtectedRoute from "./components/ProtectedRoute";
- 
+import MessagesPage   from "./pages/messages/MessagesPage";
+import ChatView       from "./pages/messages/ChatView";
+import TradePanelPage from "./pages/trades/TradePanelPage";
+
 export default function App() {
   return (
     <AuthProvider>
@@ -24,6 +27,11 @@ export default function App() {
             <Route path="/item/:id"    element={<ItemPreview />} />
             <Route path="/post"        element={<PostItem />} />
             <Route path="/profile/:id" element={<ProfilePage />} />
+            <Route path="/messages"          element={<MessagesPage />} />
+<Route path="/messages/:convoId" element={<ChatView />} />
+<Route path="/trades"            element={<TradePanelPage />} />
+<Route path="/trades/:offerId"   element={<TradePanelPage />} />
+
           </Route>
         </Routes>
       </BrowserRouter>

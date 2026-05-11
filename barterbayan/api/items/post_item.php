@@ -21,17 +21,20 @@ $database = new Database();
 $conn     = $database->getConnection();
  
 $stmt = $conn->prepare(
-    "INSERT INTO items (user_id, title, description, category, condition_status, images)
-     VALUES (:user_id, :title, :description, :category, :condition_status, :images)"
+    "INSERT INTO items (user_id, title, description, category, condition_status, swap_for, delivery_type, images)
+     VALUES (:user_id, :title, :description, :category, :condition_status, :swap_for, :delivery_type, :images)"
 );
 $stmt->execute([
     ":user_id"          => $_SESSION["user_id"],
     ":title"            => trim($data["title"]),
-    ":description"      => $data["description"] ?? "",
-    ":category"         => $data["category"]    ?? "other",
+    ":description"      => $data["description"]    ?? "",
+    ":category"         => $data["category"]       ?? "other",
     ":condition_status" => $data["condition_status"] ?? "good",
+    ":swap_for"         => $data["swap_for"]        ?? null,
+    ":delivery_type"    => $data["delivery_type"]   ?? "pickup",
     ":images"           => json_encode($data["images"] ?? []),
 ]);
+
  
 echo json_encode(["success" => true, "item_id" => $conn->lastInsertId()]);
 ?>

@@ -25,15 +25,19 @@ if ($check->fetch()) {
 $hash = password_hash($data["password"], PASSWORD_BCRYPT);
  
 $stmt = $conn->prepare(
-    "INSERT INTO users (username, email, password_hash, location)
-     VALUES (:username, :email, :password_hash, :location)"
+    "INSERT INTO users (username, email, password_hash, phone, location, city, barangay)
+     VALUES (:username, :email, :password_hash, :phone, :location, :city, :barangay)"
 );
 $stmt->execute([
     ":username"      => trim($data["username"]),
     ":email"         => trim($data["email"]),
     ":password_hash" => $hash,
+    ":phone"         => $data["phone"]    ?? null,
     ":location"      => $data["location"] ?? null,
+    ":city"          => $data["city"]     ?? null,
+    ":barangay"      => $data["barangay"] ?? null,
 ]);
+
  
 echo json_encode(["success" => true, "message" => "Registration successful."]);
 ?>

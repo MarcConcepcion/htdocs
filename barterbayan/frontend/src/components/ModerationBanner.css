@@ -1,0 +1,10 @@
+.mod-banner     { display:flex; align-items:flex-start; gap:12px; padding:14px var(--space-md); border-radius:var(--radius-md); margin:var(--space-md); }
+.mod-banner.warned { background:#FEF9C3; border:1px solid #CA8A04; }
+.mod-banner.banned { background:#FEE2E2; border:1px solid #DC2626; }
+.mod-icon       { font-size:1.8rem; flex-shrink:0; }
+.mod-title      { font-weight:700; font-size:0.9rem; margin-bottom:3px; }
+.mod-banner.warned .mod-title { color:#92400E; }
+.mod-banner.banned .mod-title { color:#991B1B; }
+.mod-msg        { font-size:0.82rem; line-height:1.4; }
+.mod-banner.warned .mod-msg { color:#78350F; }
+.mod-banner.banned .mod-msg { color:#7F1D1D; }

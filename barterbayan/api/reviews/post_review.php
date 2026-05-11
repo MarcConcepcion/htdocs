@@ -2,31 +2,31 @@
 session_start();
 require_once "../../config/cors.php";
 require_once "../../config/db.php";
- 
+
 if (!isset($_SESSION["user_id"])) {
     http_response_code(401);
     echo json_encode(["success" => false, "message" => "Not authenticated."]);
     exit();
 }
- 
+
 $data = json_decode(file_get_contents("php://input"), true);
- 
+
 if (empty($data["reviewee_id"]) || empty($data["rating"]) || empty($data["comment"])) {
     http_response_code(400);
     echo json_encode(["success" => false, "message" => "reviewee_id, rating, and comment required."]);
     exit();
 }
- 
+
 $rating = (int) $data["rating"];
 if ($rating < 1 || $rating > 5) {
     http_response_code(400);
     echo json_encode(["success" => false, "message" => "Rating must be between 1 and 5."]);
     exit();
 }
- 
+
 $database = new Database();
 $conn     = $database->getConnection();
- 
+
 // Prevent duplicate review for same offer
 if (!empty($data["offer_id"])) {
     $dup = $conn->prepare(
@@ -40,7 +40,7 @@ if (!empty($data["offer_id"])) {
         exit();
     }
 }
- 
+
 $stmt = $conn->prepare(
     "INSERT INTO reviews (reviewer_id, reviewee_id, offer_id, rating, comment)
      VALUES (:reviewer_id, :reviewee_id, :offer_id, :rating, :comment)"
@@ -52,6 +52,22 @@ $stmt->execute([
     ":rating"      => $rating,
     ":comment"     => trim($data["comment"]),
 ]);
- 
+
+// --- Moderation check after review insertion ---
+$mod = $conn->prepare(
+    "SELECT COUNT(*) AS cnt FROM reviews WHERE reviewee_id = :uid AND rating <= 2"
+);
+$mod->execute([":uid" => $data["reviewee_id"]]);
+$neg_count = (int) $mod->fetch(PDO::FETCH_ASSOC)["cnt"];
+
+if ($neg_count >= 10) {
+    $conn->prepare("UPDATE users SET is_banned = 1 WHERE user_id = :uid")
+         ->execute([":uid" => $data["reviewee_id"]]);
+} elseif ($neg_count >= 5) {
+    $conn->prepare("UPDATE users SET is_warned = 1, neg_review_count = :cnt WHERE user_id = :uid")
+         ->execute([":cnt" => $neg_count, ":uid" => $data["reviewee_id"]]);
+}
+// --- End moderation check ---
+
 echo json_encode(["success" => true, "review_id" => $conn->lastInsertId()]);
 ?>

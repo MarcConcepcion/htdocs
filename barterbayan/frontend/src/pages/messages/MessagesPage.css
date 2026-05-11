@@ -1,0 +1,13 @@
+.messages-screen  { background:var(--color-bg); min-height:100vh; }
+.msg-header       { padding:var(--space-md); border-bottom:1px solid var(--color-border); background:var(--color-surface); }
+.msg-title        { font-size:1.3rem; font-weight:700; }
+.msg-state        { text-align:center; padding:48px; color:var(--color-muted); font-size:0.9rem; }
+.msg-list         { display:flex; flex-direction:column; }
+.msg-row          { display:flex; align-items:center; gap:12px; padding:14px var(--space-md); border-bottom:1px solid var(--color-border); background:var(--color-surface); cursor:pointer; transition:background var(--transition); }
+.msg-row:hover    { background:var(--color-surface2); }
+.msg-avatar       { width:46px; height:46px; border-radius:var(--radius-full); background:var(--color-surface2); overflow:hidden; display:flex; align-items:center; justify-content:center; font-weight:700; flex-shrink:0; }
+.msg-avatar img   { width:100%; height:100%; object-fit:cover; }
+.msg-info         { display:flex; flex-direction:column; gap:3px; flex:1; overflow:hidden; }
+.msg-name         { font-weight:700; font-size:0.9rem; }
+.msg-preview      { font-size:0.8rem; color:var(--color-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.msg-unread       { background:var(--color-emerald); color:#fff; font-size:0.7rem; font-weight:700; min-width:20px; height:20px; border-radius:var(--radius-full); display:flex; align-items:center; justify-content:center; padding:0 4px; }

@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-import { apiGet } from "../../utils/api";
+import { useParams, useNavigate } from "react-router-dom";
+import { apiGet, apiPost } from "../../utils/api";
 import { useAuth } from "../../context/AuthContext";
 import NavBar       from "../../components/NavBar";
 import ItemCard     from "../../components/ItemCard";
 import ReviewCard   from "../../components/ReviewCard";
 import PostReviewModal from "../../components/PostReviewModal";
 import "./ProfilePage.css";
- 
+
 function Stars({ rating }) {
   return (
     <span className="stars">
@@ -17,34 +17,47 @@ function Stars({ rating }) {
     </span>
   );
 }
- 
+
 export default function ProfilePage() {
   const { id }   = useParams();
   const { user } = useAuth();
+  const navigate = useNavigate();
+
   const [profile,     setProfile]     = useState(null);
   const [items,       setItems]       = useState([]);
   const [reviews,     setReviews]     = useState([]);
   const [avgRating,   setAvgRating]   = useState(0);
   const [showReview,  setShowReview]  = useState(false);
- 
+
+  // New state for trades & tab
+  const [trades,     setTrades]     = useState([]);
+  const [activeTab,  setActiveTab]  = useState("listings");
+
   useEffect(() => {
     apiGet("/users/get_profile.php",    { user_id: id }).then(d => { if (d.success) setProfile(d.user); });
     apiGet("/items/get_user_items.php", { user_id: id }).then(d => { if (d.success) setItems(d.items); });
     apiGet("/reviews/get_reviews.php",  { reviewee_id: id }).then(d => {
       if (d.success) { setReviews(d.reviews); setAvgRating(d.avg_rating); }
     });
+    // Fetch trade offers where the user is either sender or receiver
+    apiGet("/trades/get_offers.php", { user_id: id }).then(d => { if (d.success) setTrades(d.offers); });
   }, [id]);
- 
+
+  const handleMessage = async () => {
+    const d = await apiPost("/messages/start_convo.php", { other_user_id: id });
+    if (d.success) navigate(`/messages/${d.convo_id}`);
+  };
+
   if (!profile) return <p className="profile-loading">Loading...</p>;
- 
+
   const isOwnProfile = user?.user_id == id;
   const joinYear = new Date(profile.created_at || Date.now()).getFullYear();
- 
+
   return (
     <div className="profile-screen">
       <NavBar />
- 
-      {/* ── Hero ── */}
+
+      {/* Hero */}
       <div className="profile-hero">
         <div className="profile-avatar-wrap">
           <div className="profile-avatar">
@@ -56,7 +69,7 @@ export default function ProfilePage() {
             <span className="profile-verified-badge">&#10003;</span>
           )}
         </div>
- 
+
         <p className="profile-location">&#x1F4CD; {profile.location || "Location not set"}</p>
         {avgRating > 0 && (
           <p className="profile-rating">
@@ -65,20 +78,25 @@ export default function ProfilePage() {
           </p>
         )}
         <p className="profile-member">&#x23F0; Member since {joinYear}</p>
- 
+
         <div className="profile-actions">
           {isOwnProfile ? (
             <button className="btn-secondary profile-btn">&#x270E; Edit Profile</button>
           ) : (
-            <button className="btn-secondary profile-btn" onClick={() => setShowReview(true)}>
-              &#x2605; Leave a Review
-            </button>
+            <>
+              <button className="btn-secondary profile-btn" onClick={() => setShowReview(true)}>
+                &#x2605; Leave a Review
+              </button>
+              <button className="btn-secondary profile-btn" onClick={handleMessage}>
+                &#x1F4AC; Message
+              </button>
+            </>
           )}
           {isOwnProfile && (
             <button className="profile-logout-btn">&#x2192; Logout</button>
           )}
         </div>
- 
+
         {/* Stats row */}
         <div className="profile-stats">
           <div className="profile-stat">
@@ -92,41 +110,79 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
- 
-      {/* ── Active Listings ── */}
-      <div className="profile-section">
-        <h3 className="profile-section-title">
-          <span className="profile-section-icon">&#x1F4E6;</span> My Active Listings
-        </h3>
-        {items.filter(i=>i.status==="available").length === 0 ? (
-          <div className="profile-empty-state">
-            <span className="profile-empty-icon">&#x1F4E6;</span>
-            <p className="profile-empty-msg">You don't have any active listings right now.</p>
-            <p className="profile-empty-hint">Post an item to start trading!</p>
-          </div>
-        ) : (
-          <div className="profile-grid">
-            {items.filter(i=>i.status==="available").map(item => (
-              <ItemCard key={item.item_id} item={item} />
-            ))}
-          </div>
-        )}
+
+      {/* Tab Bar */}
+      <div className="profile-tabs">
+        {["listings", "trades", "reviews"].map(t => (
+          <button
+            key={t}
+            className={`profile-tab ${activeTab === t ? "active" : ""}`}
+            onClick={() => setActiveTab(t)}
+          >
+            {t.charAt(0).toUpperCase() + t.slice(1)}
+          </button>
+        ))}
       </div>
- 
-      {/* ── Reviews ── */}
-      <div className="profile-section">
-        <h3 className="profile-section-title">
-          <span className="profile-section-icon">&#x1F4AC;</span> My Reviews
-        </h3>
-        {reviews.length === 0 ? (
-          <p className="profile-no-reviews">No reviews yet.</p>
-        ) : (
-          <div className="profile-reviews-list">
-            {reviews.map(r => <ReviewCard key={r.review_id} review={r} />)}
-          </div>
-        )}
-      </div>
- 
+
+      {/* Conditional Sections */}
+      {activeTab === "listings" && (
+        <div className="profile-section">
+          <h3 className="profile-section-title">
+            <span className="profile-section-icon">&#x1F4E6;</span> My Active Listings
+          </h3>
+          {items.filter(i => i.status === "available").length === 0 ? (
+            <div className="profile-empty-state">
+              <span className="profile-empty-icon">&#x1F4E6;</span>
+              <p className="profile-empty-msg">You don't have any active listings right now.</p>
+              <p className="profile-empty-hint">Post an item to start trading!</p>
+            </div>
+          ) : (
+            <div className="profile-grid">
+              {items.filter(i => i.status === "available").map(item => (
+                <ItemCard key={item.item_id} item={item} />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {activeTab === "trades" && (
+        <div className="profile-section">
+          <h3 className="profile-section-title">
+            <span className="profile-section-icon">&#x21C6;</span> Recent Trades
+          </h3>
+          {trades.length === 0 ? (
+            <p className="profile-no-reviews">No trades yet.</p>
+          ) : (
+            trades.map(o => (
+              <div key={o.offer_id} className="trade-history-row">
+                <span className="th-item">
+                  {o.offered_title} &#x21C6; {o.requested_title}
+                </span>
+                <span className={`tp-status-badge tp-status-${o.status === "accepted" ? "green" : o.status === "declined" ? "red" : "yellow"}`}>
+                  {o.status}
+                </span>
+              </div>
+            ))
+          )}
+        </div>
+      )}
+
+      {activeTab === "reviews" && (
+        <div className="profile-section">
+          <h3 className="profile-section-title">
+            <span className="profile-section-icon">&#x1F4AC;</span> My Reviews
+          </h3>
+          {reviews.length === 0 ? (
+            <p className="profile-no-reviews">No reviews yet.</p>
+          ) : (
+            <div className="profile-reviews-list">
+              {reviews.map(r => <ReviewCard key={r.review_id} review={r} />)}
+            </div>
+          )}
+        </div>
+      )}
+
       {showReview && (
         <PostReviewModal
           revieweeId={id}

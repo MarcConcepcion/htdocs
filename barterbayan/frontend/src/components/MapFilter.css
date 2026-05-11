@@ -2,27 +2,20 @@
   background:     var(--color-surface);
   border-radius:  var(--radius-lg) var(--radius-lg) 0 0;
   border-top:     2px solid var(--color-emerald);
-  width:          100%;
-  max-width:      540px;
+  width:          100%; max-width:540px;
   padding:        var(--space-lg);
-  display:        flex;
-  flex-direction: column;
-  gap:            var(--space-md);
+  display:        flex; flex-direction:column; gap:var(--space-md);
+  z-index:        calc(var(--z-overlay) + 20);
+  position:       relative;
 }
-.map-filter-list {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 8px;
-}
-.map-filter-item {
-  padding:       12px;
-  border:        1.5px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  font-size:     0.9rem;
-  font-weight:   600;
-  color:         var(--color-muted);
-  text-transform: capitalize;
-  transition:    all var(--transition);
-}
-.map-filter-item:hover  { border-color: var(--color-emerald); color: var(--color-emerald); }
-.map-filter-item.active { background: var(--color-emerald); color: #fff; border-color: var(--color-emerald); }
+.mf-section       { display:flex; flex-direction:column; gap:8px; }
+.mf-section-label { font-size:0.75rem; font-weight:700; color:var(--color-muted); text-transform:uppercase; letter-spacing:0.08em; }
+.mf-city-row      { display:flex; align-items:center; gap:8px; background:var(--color-surface2); border-radius:var(--radius-sm); padding:10px 14px; }
+.mf-city-icon     { color:var(--color-emerald); }
+.mf-city-name     { font-weight:600; font-size:0.9rem; flex:1; }
+.mf-city-clear    { font-size:0.75rem; color:var(--color-emerald); font-weight:600; }
+.mf-city-hint     { font-size:0.75rem; color:var(--color-emerald-txt); }
+.map-filter-list  { display:grid; grid-template-columns:repeat(2,1fr); gap:8px; }
+.map-filter-item  { padding:11px; border:1.5px solid var(--color-border); border-radius:var(--radius-sm); font-size:0.88rem; font-weight:600; color:var(--color-muted); text-align:center; transition:all var(--transition); }
+.map-filter-item:hover  { border-color:var(--color-emerald); color:var(--color-emerald); }
+.map-filter-item.active { background:var(--color-emerald); color:#fff; border-color:var(--color-emerald); }

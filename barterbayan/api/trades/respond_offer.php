@@ -31,5 +31,29 @@ $stmt->execute([
     ":uid"      => $_SESSION["user_id"],
 ]);
  
+// --- Send notification to the sender (after successful update) ---
+// Fetch offer details to get the sender_id
+$fetch = $conn->prepare("SELECT sender_id FROM trade_offers WHERE offer_id = :oid");
+$fetch->execute([":oid" => $offer_id]);
+$offer = $fetch->fetch(PDO::FETCH_ASSOC);
+
+if ($offer) {
+    $msg = $response === "accepted"
+         ? "Your trade offer was ACCEPTED! Coordinate with the trader."
+         : "Your trade offer was declined.";
+    
+    $notif = $conn->prepare(
+        "INSERT INTO notifications (user_id, type, reference_id, message)
+         VALUES (:uid, :type, :ref, :msg)"
+    );
+    $notif->execute([
+        ":uid"  => $offer["sender_id"],
+        ":type" => $response === "accepted" ? "offer_accepted" : "offer_declined",
+        ":ref"  => $offer_id,
+        ":msg"  => $msg,
+    ]);
+}
+// --- End notification block ---
+ 
 echo json_encode(["success" => true, "message" => "Offer " . $response . "."]);
 ?>
