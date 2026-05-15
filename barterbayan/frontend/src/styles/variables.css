@@ -39,4 +39,8 @@
   --z-nav:     40;
   --z-overlay: 50;
   --z-modal:   60;
+  /* Add to :root in variables.css */
+--max-width:       900px;    /* max content width on desktop */
+--content-padding: 84px;     /* left space for FloatingNav collapsed */
+
 }

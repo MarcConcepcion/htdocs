@@ -82,3 +82,35 @@ input, textarea, select { font-family: inherit; font-size: inherit; }
 .stars { display: inline-flex; gap: 2px; }
 .star  { font-size: 0.9rem; color: var(--color-border-dark); }
 .star.filled { color: var(--color-star); }
+/* ── PC / Desktop layout ── */
+.page-with-nav {
+  padding-left: var(--content-padding);
+  min-height:   100vh;
+}
+ 
+/* Content width limiter — prevents stretching on wide screens */
+.content-wrap {
+  max-width:  var(--max-width);
+  margin:     0 auto;
+  padding:    0 var(--space-md);
+}
+ 
+/* Fluid font sizes using clamp(min, preferred, max) */
+body {
+  font-size: clamp(14px, 1.5vw, 16px);
+}
+h1 { font-size: clamp(1.4rem, 3vw, 2rem); }
+h2 { font-size: clamp(1.1rem, 2vw, 1.4rem); }
+h3 { font-size: clamp(0.95rem, 1.5vw, 1.1rem); }
+ 
+/* FloatingNav expanded state — wider left padding */
+@media (min-width: 768px) {
+  .page-with-nav { padding-left: 100px; }
+}
+ 
+/* On very wide screens, center the whole app */
+@media (min-width: 1200px) {
+  .floating-nav {
+    left: calc(50% - var(--max-width)/2 - 72px);
+  }
+}

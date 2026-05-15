@@ -14,18 +14,21 @@ $conn     = $database->getConnection();
  
 $stmt = $conn->prepare(
     "SELECT t.*,
-            s.username AS sender_name,
-            r.username AS receiver_name,
-            oi.title   AS offered_title,
-            ri.title   AS requested_title
+            s.username  AS sender_name,
+            r.username  AS receiver_name,
+            oi.title    AS offered_title,
+            oi.delivery_type AS offered_delivery,
+            ri.title    AS requested_title,
+            ri.delivery_type AS requested_delivery
      FROM trade_offers t
-     JOIN users s ON t.sender_id   = s.user_id
-     JOIN users r ON t.receiver_id = r.user_id
-     JOIN items oi ON t.offered_item_id   = oi.item_id
-     JOIN items ri ON t.requested_item_id = ri.item_id
+     JOIN users s  ON t.sender_id          = s.user_id
+     JOIN users r  ON t.receiver_id         = r.user_id
+     JOIN items oi ON t.offered_item_id     = oi.item_id
+     JOIN items ri ON t.requested_item_id   = ri.item_id
      WHERE t.sender_id = :uid OR t.receiver_id = :uid2
      ORDER BY t.created_at DESC"
 );
+
 $stmt->execute([":uid" => $_SESSION["user_id"], ":uid2" => $_SESSION["user_id"]]);
 $offers = $stmt->fetchAll(PDO::FETCH_ASSOC);
  

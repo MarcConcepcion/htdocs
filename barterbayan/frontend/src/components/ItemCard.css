@@ -60,3 +60,12 @@
   display: flex; align-items: center; gap: 4px; margin-bottom: 3px;
 }
 .item-card-looking-val { font-size: 0.82rem; color: var(--color-emerald-txt); }
+
+.clickable-name {
+  cursor: pointer;
+}
+
+.clickable-name:hover {
+  color: var(--color-emerald);
+  text-decoration: underline;
+}

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { apiPost } from "../../utils/api";
+import Logo from "../../components/Logo";
 import "./SignUp.css";
 
 const PH_CITIES = [
@@ -43,7 +44,7 @@ export default function SignUp() {
   return (
     <div className="auth-screen">
       <div className="auth-card">
-        <div className="auth-brand-icon">&#x21BB;</div>
+        <Logo size={56} />
         <h1 className="auth-logo">BarterBayan</h1>
         <p className="auth-tagline">Join the Community Barter Network</p>
 

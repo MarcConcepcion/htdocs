@@ -3,18 +3,18 @@ import { useAuth } from "../context/AuthContext";
 import { apiGet }  from "../utils/api";
 import MapFilter   from "./MapFilter";
 import "./MapOverlay.css";
- 
+
 // Leaflet loaded via useEffect to avoid SSR/Vite issues
 let L = null;
- 
+
 export default function MapOverlay({ onClose }) {
   const { user }    = useAuth();
   const [items,     setItems]     = useState([]);
   const [showFilter,setShowFilter]= useState(false);
-  const [filterCat, setFilterCat] = useState("all");
+  const [filterRegion, setFilterRegion] = useState("");   // empty = all (changed from filterCat)
   const [mapReady,  setMapReady]  = useState(false);
   const [mapInst,   setMapInst]   = useState(null);
- 
+
   // Load Leaflet CSS dynamically once
   useEffect(() => {
     if (!document.getElementById("leaflet-css")) {
@@ -39,7 +39,7 @@ export default function MapOverlay({ onClose }) {
     // Fetch items with coordinates
     apiGet("/items/get_items.php").then(d => { if (d.success) setItems(d.items); });
   }, []);
- 
+
   // Init map after container is in DOM
   useEffect(() => {
     if (!mapReady || mapInst) return;
@@ -54,12 +54,20 @@ export default function MapOverlay({ onClose }) {
     }).addTo(map);
     setMapInst(map);
   }, [mapReady]);
- 
-  // Add/update markers when items or filter changes
+
+  // Add/update markers when items or region filter changes
   useEffect(() => {
     if (!mapInst || !L) return;
     mapInst.eachLayer(l => { if (l instanceof L.Marker) mapInst.removeLayer(l); });
-    const visible = filterCat === "all" ? items : items.filter(i => i.category === filterCat);
+    
+    // Filter by region (location or city contains filterRegion substring, case‑insensitive)
+    const visible = filterRegion
+      ? items.filter(i =>
+          (i.location && i.location.toLowerCase().includes(filterRegion.toLowerCase())) ||
+          (i.city     && i.city.toLowerCase().includes(filterRegion.toLowerCase()))
+        )
+      : items;
+    
     visible
       .filter(i => i.latitude && i.longitude)
       .forEach(item => {
@@ -67,8 +75,8 @@ export default function MapOverlay({ onClose }) {
           .addTo(mapInst)
           .bindPopup(`<strong>${item.title}</strong><br/>${item.username} — ${item.location}`);
       });
-  }, [mapInst, items, filterCat]);
- 
+  }, [mapInst, items, filterRegion]);
+
   return (
     <>
       <div className="map-overlay-wrap">
@@ -81,8 +89,8 @@ export default function MapOverlay({ onClose }) {
       </div>
       {showFilter && (
         <MapFilter
-          current={filterCat}
-          onApply={cat => { setFilterCat(cat); setShowFilter(false); }}
+          currentRegion={filterRegion}
+          onApply={region => { setFilterRegion(region); setShowFilter(false); }}
           onClose={() => setShowFilter(false)}
         />
       )}

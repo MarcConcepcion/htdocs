@@ -43,3 +43,29 @@
 .tp-reject        { flex:1; border-color:var(--color-danger); color:var(--color-danger); }
 .tp-review-btn    { align-self:flex-start; }
 .tp-empty         { flex:1; display:flex; align-items:center; justify-content:center; color:var(--color-muted); }
+
+.tp-delivery {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tp-delivery-banner {
+  background: var(--color-emerald-lt, #d1fae5);
+  border: 1px solid rgba(5, 150, 105, 0.3);
+  border-radius: var(--radius-md, 8px);
+  padding: var(--space-md, 12px);
+  margin-top: 16px;
+}
+
+.tp-delivery-banner-title {
+  font-weight: 700;
+  color: var(--color-emerald-txt, #065f46);
+  margin-bottom: 4px;
+}
+
+.tp-delivery-banner-sub {
+  font-size: 0.85rem;
+  color: var(--color-emerald-txt, #065f46);
+  line-height: 1.5;
+}

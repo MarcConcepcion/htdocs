@@ -75,3 +75,12 @@
   border-radius:var(--radius-md); padding:15px;
   font-size:1rem; display:flex; align-items:center; justify-content:center; gap:8px;
 }
+
+.clickable-name {
+  cursor: pointer;
+}
+
+.clickable-name:hover {
+  color: var(--color-emerald);
+  text-decoration: underline;
+}

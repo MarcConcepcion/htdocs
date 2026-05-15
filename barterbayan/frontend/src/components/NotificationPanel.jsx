@@ -26,7 +26,7 @@ export default function NotificationPanel({ onClose, setUnread }) {
   };
 
   return (
-    <div className="overlay-backdrop" onClick={onClose}>
+    <div className="overlay-backdrop-center" onClick={onClose}>
       <div className="notif-panel" onClick={e => e.stopPropagation()}>
         <div className="modal-header">
           <h2 className="modal-title">Notifications</h2>

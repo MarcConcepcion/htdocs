@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { apiPost } from "../../utils/api";
+import Logo from "../../components/Logo";
 import "./Login.css";
  
 export default function Login() {
@@ -30,7 +31,7 @@ export default function Login() {
     <div className="auth-screen">
       <div className="auth-card">
         {/* Brand icon — replace emoji with your SVG when ready */}
-        <div className="auth-brand-icon">&#x21BB;</div>
+        <Logo size={56} />
         <h1 className="auth-logo">BarterBayan</h1>
         <p className="auth-tagline">The Community Barter Network.</p>
         <span className="auth-pill">Swap, Don't shop!</span>
