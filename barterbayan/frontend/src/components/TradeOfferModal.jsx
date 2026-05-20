@@ -27,19 +27,26 @@ export default function TradeOfferModal({ targetItem, onClose }) {
     if (data.success) setSent(true);
   };
  
-  if (sent) return (
-    <div className="overlay-backdrop" onClick={onClose}>
-      <div className="trade-modal sent-msg">
-        <p>&#10003; Offer sent successfully!</p>
+ if (sent) {
+  return (
+    <div className="trade-success-overlay" onClick={onClose}>
+      <div className="trade-success-card" onClick={e=>e.stopPropagation()}>
+        <span className="trade-success-icon">&#x2713;</span>
+        <p className="trade-success-title">Offer sent successfully!</p>
+        <p className="trade-success-sub">
+          The trader has been notified of your offer.
+        </p>
         <button className="btn-primary" onClick={onClose}>Close</button>
       </div>
     </div>
   );
+}
+
  
   return (
     <>
-      <div className="overlay-backdrop" onClick={onClose}>
-        <div className="trade-modal" onClick={e => e.stopPropagation()}>
+      <div className="overlay-backdrop-center" onClick={onClose}>
+  <div className="trade-modal" onClick={e => e.stopPropagation()}>
           <div className="modal-header">
             <h2 className="modal-title">Make a Trade Offer</h2>
             <button className="modal-close" onClick={onClose}>&times;</button>

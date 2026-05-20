@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { apiPost } from "../../utils/api";
 import NavBar from "../../components/FloatingNav";
 import "./PostItem.css";
+import PageBanner from "../../components/PageBanner";
 
 // Converts a File object to base64 string
 function fileToBase64(file) {
@@ -19,6 +20,7 @@ export default function PostItem() {
   const [form, setForm] = useState({
     title: "", description: "", category: "other",
     condition_status: "good", swap_for: "",
+    delivery_type: "",  // required — empty = not chosen
   });
   const [imageFiles,    setImageFiles]    = useState([]);  // preview blobs
   const [uploadedUrls,  setUploadedUrls]  = useState([]);  // returned from PHP
@@ -64,6 +66,7 @@ export default function PostItem() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.title.trim()) { setError("Title is required."); return; }
+    if (!form.delivery_type) { setError("Please choose a delivery option."); return; }
     setSaving(true);
     const data = await apiPost("/items/post_item.php", {
       ...form,
@@ -81,7 +84,7 @@ export default function PostItem() {
   return (
     <div className="post-screen">
       <NavBar />
-
+      <PageBanner />
       <div className="content-wrap">       {/* ADDED WRAPPER */}
 
         <div className="post-body">
@@ -140,6 +143,34 @@ export default function PostItem() {
                   placeholder="Describe your item, its features, history, and any flaws..."
                   value={form.description} onChange={handleChange} />
               </div>
+            </div>
+          </div>
+
+          {/* ── Delivery Option (NEW) ── */}
+          <div className="post-section">
+            <div className="post-section-label">
+              <span className="post-section-icon">🚚</span> Delivery Option
+            </div>
+            <p className="post-label">How can traders receive this item? <span className="post-required">*</span></p>
+            <div className="post-delivery-options">
+              {[
+                { value: "pickup", icon: "🤝", label: "Meet-up / Pick-up", desc: "Buyer comes to you or you meet somewhere" },
+                { value: "cod",    icon: "📦", label: "Cash on Delivery",   desc: "Ship and collect on delivery" },
+                { value: "both",   icon: "✔️", label: "Both options",       desc: "Trader can choose either" },
+              ].map(opt => (
+                <label key={opt.value}
+                  className={`post-delivery-card ${form.delivery_type === opt.value ? "selected" : ""}`}>
+                  <input type="radio" name="delivery_type" value={opt.value}
+                    checked={form.delivery_type === opt.value}
+                    onChange={e => setForm({...form, delivery_type: e.target.value})}
+                    style={{display:"none"}} />
+                  <span className="post-delivery-icon">{opt.icon}</span>
+                  <div>
+                    <p className="post-delivery-label">{opt.label}</p>
+                    <p className="post-delivery-desc">{opt.desc}</p>
+                  </div>
+                </label>
+              ))}
             </div>
           </div>
 

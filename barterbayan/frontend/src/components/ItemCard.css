@@ -69,3 +69,13 @@
   color: var(--color-emerald);
   text-decoration: underline;
 }
+.item-card-img {
+  width:    100%;
+  height:   200px;    /* fixed height so cards align in grid */
+  overflow: hidden;
+  position: relative;
+}
+ 
+@media (min-width: 768px) {
+  .item-card-img { height: 220px; }
+}

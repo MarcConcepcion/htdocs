@@ -6,6 +6,7 @@ import NavBar       from "../../components/FloatingNav";
 import ItemCard     from "../../components/ItemCard";
 import ReviewCard   from "../../components/ReviewCard";
 import PostReviewModal from "../../components/PostReviewModal";
+import PageBanner   from "../../components/PageBanner";
 import "./ProfilePage.css";
 
 function Stars({ rating }) {
@@ -31,12 +32,12 @@ export default function ProfilePage() {
   const [showReview, setShowReview] = useState(false);
   const [trades, setTrades] = useState([]);
   const [activeTab, setActiveTab] = useState("listings");
+  const [pfpUploading, setPfpUploading] = useState(false);  // renamed from uploadingPic
 
   // Edit profile state
   const [editing, setEditing] = useState(false);
   const [editForm, setEditForm] = useState({ username: "", location: "", barangay: "" });
   const [editSaving, setEditSaving] = useState(false);
-  const [uploadingPic, setUploadingPic] = useState(false);
 
   useEffect(() => {
     apiGet("/users/get_profile.php", { user_id: id }).then(d => { if (d.success) setProfile(d.user); });
@@ -80,36 +81,46 @@ export default function ProfilePage() {
     setEditSaving(false);
   };
 
-  // Profile picture upload
-  const handlePicChange = async (e) => {
-    const file = e.target.files[0];
+  // NEW Profile picture upload using base64 + upload_image.php + update_profile.php
+  const handlePfpChange = async (e) => {
+    const file = e.target.files?.[0];
     if (!file) return;
     if (!file.type.startsWith("image/")) {
       alert("Please select an image file.");
       return;
     }
-    const formData = new FormData();
-    formData.append("profile_pic", file);
+    setPfpUploading(true);
 
-    setUploadingPic(true);
-    try {
-      const res = await fetch("/api/users/upload_profile_pic.php", {
-        method: "POST",
-        credentials: "include",
-        body: formData,
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const base64 = reader.result;
+      // 1. Upload image to get URL
+      const uploadRes = await apiPost("/items/upload_image.php", {
+        image_data: base64,
+        file_name:  file.name,
       });
-      const data = await res.json();
-      if (data.success) {
-        setProfile(p => ({ ...p, profile_pic: data.profile_pic_url }));
+      if (uploadRes.success) {
+        // 2. Update profile with the new image URL
+        const updateRes = await apiPost("/users/update_profile.php", {
+          username:    profile.username,
+          location:    profile.location || "",
+          profile_pic: uploadRes.url,
+        });
+        if (updateRes.success) {
+          setProfile(p => ({ ...p, profile_pic: uploadRes.url }));
+        } else {
+          alert(updateRes.message || "Failed to update profile picture");
+        }
       } else {
-        alert(data.message || "Upload failed");
+        alert(uploadRes.message || "Image upload failed");
       }
-    } catch (err) {
-      console.error(err);
-      alert("Upload error");
-    }
-    setUploadingPic(false);
-    if (fileInputRef.current) fileInputRef.current.value = "";
+      setPfpUploading(false);
+    };
+    reader.onerror = () => {
+      alert("Failed to read the image file");
+      setPfpUploading(false);
+    };
+    reader.readAsDataURL(file);
   };
 
   if (!profile) return <p className="profile-loading">Loading...</p>;
@@ -120,12 +131,17 @@ export default function ProfilePage() {
   return (
     <div className="profile-screen">
       <NavBar />
-
-      <div className="content-wrap">       {/* ADDED WRAPPER */}
+      <PageBanner />
+      <div className="content-wrap">
 
         {/* Hero */}
         <div className="profile-hero">
-          <div className="profile-avatar-wrap">
+          {/* Avatar wrap with click-to-upload for own profile */}
+          <div
+            className="profile-avatar-wrap"
+            onClick={() => isOwnProfile && fileInputRef.current?.click()}
+            style={{ cursor: isOwnProfile ? "pointer" : "default" }}
+          >
             <div className="profile-avatar">
               {profile.profile_pic ? (
                 <img src={profile.profile_pic} alt={profile.username} />
@@ -133,39 +149,33 @@ export default function ProfilePage() {
                 <span className="profile-avatar-icon">&#x1F464;</span>
               )}
             </div>
-            {isOwnProfile && !editing && (
-              <>
-                <button
-                  className="profile-change-pic-btn"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={uploadingPic}
-                >
-                  {uploadingPic ? "⏳" : "📷"}
-                </button>
-                <input
-                  type="file"
-                  accept="image/*"
-                  ref={fileInputRef}
-                  style={{ display: "none" }}
-                  onChange={handlePicChange}
-                />
-              </>
-            )}
             {profile.is_verified == 1 && (
-              <span className="profile-verified-badge">&#10003;</span>
+              <span className="profile-verified-badge">✓</span>
             )}
+            {isOwnProfile && (
+              <span className="profile-camera-btn">
+                {pfpUploading ? "⏳" : "📷"}
+              </span>
+            )}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              style={{ display: "none" }}
+              onChange={handlePfpChange}
+            />
           </div>
 
           {!editing ? (
             <>
-              <p className="profile-location">&#x1F4CD; {profile.location || "Location not set"}</p>
+              <p className="profile-location">📍 {profile.location || "Location not set"}</p>
               {avgRating > 0 && (
                 <p className="profile-rating">
                   <Stars rating={avgRating} />
                   <span className="profile-rating-val">{avgRating} Rating</span>
                 </p>
               )}
-              <p className="profile-member">&#x23F0; Member since {joinYear}</p>
+              <p className="profile-member">⏰ Member since {joinYear}</p>
             </>
           ) : (
             <div className="profile-edit-form">
@@ -200,20 +210,20 @@ export default function ProfilePage() {
             {isOwnProfile && !editing && (
               <>
                 <button className="btn-secondary profile-btn" onClick={startEdit}>
-                  &#x270E; Edit Profile
+                  ✎ Edit Profile
                 </button>
                 <button className="profile-logout-btn" onClick={handleLogout}>
-                  &#x2192; Logout
+                  → Logout
                 </button>
               </>
             )}
             {!isOwnProfile && (
               <>
                 <button className="btn-secondary profile-btn" onClick={() => setShowReview(true)}>
-                  &#x2605; Leave a Review
+                  ★ Leave a Review
                 </button>
                 <button className="btn-secondary profile-btn" onClick={handleMessage}>
-                  &#x1F4AC; Message
+                  💬 Message
                 </button>
               </>
             )}
@@ -252,11 +262,11 @@ export default function ProfilePage() {
         {activeTab === "listings" && (
           <div className="profile-section">
             <h3 className="profile-section-title">
-              <span className="profile-section-icon">&#x1F4E6;</span> My Active Listings
+              <span className="profile-section-icon">📦</span> My Active Listings
             </h3>
             {items.filter(i => i.status === "available").length === 0 ? (
               <div className="profile-empty-state">
-                <span className="profile-empty-icon">&#x1F4E6;</span>
+                <span className="profile-empty-icon">📦</span>
                 <p className="profile-empty-msg">You don't have any active listings right now.</p>
                 <p className="profile-empty-hint">Post an item to start trading!</p>
               </div>
@@ -273,7 +283,7 @@ export default function ProfilePage() {
         {activeTab === "trades" && (
           <div className="profile-section">
             <h3 className="profile-section-title">
-              <span className="profile-section-icon">&#x21C6;</span> Recent Trades
+              <span className="profile-section-icon">🔄</span> Recent Trades
             </h3>
             {trades.length === 0 ? (
               <p className="profile-no-reviews">No trades yet.</p>
@@ -281,7 +291,7 @@ export default function ProfilePage() {
               trades.map(o => (
                 <div key={o.offer_id} className="trade-history-row">
                   <span className="th-item">
-                    {o.offered_title} &#x21C6; {o.requested_title}
+                    {o.offered_title} ⇄ {o.requested_title}
                   </span>
                   <span className={`tp-status-badge tp-status-${o.status === "accepted" ? "green" : o.status === "declined" ? "red" : "yellow"}`}>
                     {o.status}
@@ -295,7 +305,7 @@ export default function ProfilePage() {
         {activeTab === "reviews" && (
           <div className="profile-section">
             <h3 className="profile-section-title">
-              <span className="profile-section-icon">&#x1F4AC;</span> My Reviews
+              <span className="profile-section-icon">💬</span> My Reviews
             </h3>
             {reviews.length === 0 ? (
               <p className="profile-no-reviews">No reviews yet.</p>
@@ -315,7 +325,7 @@ export default function ProfilePage() {
           />
         )}
 
-      </div>                               {/* CLOSE WRAPPER */}
+      </div>
     </div>
   );
 }

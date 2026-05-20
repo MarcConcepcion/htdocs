@@ -114,3 +114,189 @@ h3 { font-size: clamp(0.95rem, 1.5vw, 1.1rem); }
     left: calc(50% - var(--max-width)/2 - 72px);
   }
 }
+/* ════════════════════════════════════════════════════════
+   PLATFORM-FRIENDLY RESPONSIVE SYSTEM
+   Works for: mobile 375px, tablet 768px, desktop 1440px+
+════════════════════════════════════════════════════════ */
+ 
+/* ── FloatingNav width tokens ── */
+:root {
+  --nav-w:          64px;
+  --nav-w-expanded: 188px;
+  --content-max:    1100px;
+}
+ 
+/* ── Page layout — all protected pages ── */
+.page-with-nav {
+  margin-left:  calc(var(--nav-w) + 12px);
+  min-height:   100vh;
+  display:      flex;
+  flex-direction: column;
+  transition:   margin-left var(--transition);
+}
+ 
+/* Content wrapper — limits width on wide screens */
+.content-wrap {
+  width:      100%;
+  max-width:  var(--content-max);
+  margin:     0 auto;
+  padding:    0 var(--space-md);
+}
+ 
+/* ── Mobile: nav collapses but still on left ── */
+@media (max-width: 480px) {
+  :root { --nav-w: 52px; }
+  .page-with-nav { margin-left: calc(var(--nav-w) + 8px); }
+  .fn-label { display: none; }
+}
+ 
+/* ── Tablet ── */
+@media (min-width: 481px) and (max-width: 767px) {
+  :root { --nav-w: 58px; }
+}
+ 
+/* ── Desktop ── */
+@media (min-width: 1024px) {
+  .page-with-nav { margin-left: calc(var(--nav-w) + 16px); }
+}
+ 
+/* ── Wide desktop: center the floating nav ── */
+@media (min-width: 1400px) {
+  .floating-nav {
+    left: max(12px, calc(50vw - var(--content-max)/2 - var(--nav-w) - 16px));
+  }
+}
+ 
+/* ── Fluid typography ── */
+html { font-size: clamp(14px, 1.3vw, 16px); }
+body { font-size: 1rem; }
+ 
+/* ── Chat shell responsive ── */
+@media (max-width: 640px) {
+  .chat-sidebar { display:none; }
+  .chat-shell   { flex-direction:column; }
+}
+ 
+/* ── Prevent content from touching FloatingNav on narrow screens ── */
+.preview-content,
+.post-body,
+.landing-hero { overflow-x: hidden; }
+ 
+/* ── Modals always centered, never clipped ── */
+.overlay-backdrop-center {
+  padding: var(--space-md);
+  box-sizing: border-box;
+}
+
+/* ============================================================
+   v1.5.0 ANIMATION & TRANSITION OVERHAUL
+============================================================ */
+ 
+*, *::before, *::after {
+  transition-property: background-color, border-color, color, box-shadow, transform, opacity;
+  transition-duration: 0.18s;
+  transition-timing-function: ease;
+}
+.no-transition, .no-transition * { transition: none !important; }
+ 
+.page-with-nav { animation: page-enter 0.28s ease both; }
+@keyframes page-enter {
+  from { opacity:0; transform:translateY(8px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+ 
+.item-card {
+  transition: box-shadow 0.22s ease, transform 0.22s ease, border-color 0.18s ease !important;
+}
+.item-card:hover { transform:translateY(-4px); box-shadow:0 10px 32px rgba(0,0,0,0.13); }
+ 
+.btn-primary:active   { transform: scale(0.975); }
+.btn-secondary:active { transform: scale(0.975); }
+ 
+.fn-icon { transition: transform 0.18s cubic-bezier(0.34,1.56,0.64,1) !important; }
+.fn-item:hover .fn-icon  { transform: scale(1.2); }
+.fn-item.active .fn-icon { transform: scale(1.15); }
+ 
+.floating-nav { transition: width 0.25s cubic-bezier(0.4,0,0.2,1) !important; }
+ 
+.cat-chip { transition: all 0.18s ease !important; }
+.cat-chip.active { animation: chip-select 0.2s cubic-bezier(0.34,1.56,0.64,1); }
+@keyframes chip-select { from{transform:scale(0.9)} to{transform:scale(1)} }
+ 
+.review-modal, .trade-modal, .confirm-box, .notif-panel {
+  animation: modal-in 0.22s cubic-bezier(0.34,1.56,0.64,1) !important;
+}
+@keyframes modal-in {
+  from { opacity:0; transform:scale(0.92) translateY(-10px); }
+  to   { opacity:1; transform:scale(1) translateY(0); }
+}
+ 
+.notif-row { animation: slide-in-right 0.2s ease both; }
+@keyframes slide-in-right {
+  from { opacity:0; transform:translateX(12px); }
+  to   { opacity:1; transform:translateX(0); }
+}
+ 
+.msg-sidebar-row.active, .chat-sidebar-row.active, .tp-offer-row.active {
+  animation: row-select 0.18s ease;
+}
+@keyframes row-select {
+  from { background: var(--color-surface); }
+  to   { background: var(--color-emerald-lt); }
+}
+ 
+.profile-avatar-wrap:hover .profile-avatar {
+  border-color: var(--color-emerald);
+  box-shadow:   0 0 0 4px rgba(5,150,105,0.2);
+}
+ 
+.star-pick { transition: color 0.15s ease, transform 0.15s cubic-bezier(0.34,1.56,0.64,1) !important; }
+.star-pick:hover { transform: scale(1.25) rotate(-5deg); }
+ 
+.tp-offer-row { transition: background 0.15s ease, border-left-color 0.15s ease !important; }
+ 
+.page-banner {
+  background-size: 200% 100%;
+  animation: banner-shimmer 8s ease infinite;
+}
+@keyframes banner-shimmer {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+ 
+.form-field:focus { animation: focus-ring 0.2s ease; }
+@keyframes focus-ring {
+  from { box-shadow: 0 0 0 0 rgba(5,150,105,0.4); }
+  to   { box-shadow: 0 0 0 3px rgba(5,150,105,0.12); }
+}
+ 
+.fav-active { animation: heart-pop 0.3s cubic-bezier(0.34,1.56,0.64,1); }
+@keyframes heart-pop {
+  0%   { transform:scale(1); }
+  50%  { transform:scale(1.4); }
+  100% { transform:scale(1); }
+}
+ 
+.item-card { animation: card-appear 0.3s ease both; }
+.item-card:nth-child(1) { animation-delay:0.05s; }
+.item-card:nth-child(2) { animation-delay:0.10s; }
+.item-card:nth-child(3) { animation-delay:0.15s; }
+.item-card:nth-child(4) { animation-delay:0.20s; }
+.item-card:nth-child(5) { animation-delay:0.25s; }
+.item-card:nth-child(6) { animation-delay:0.30s; }
+@keyframes card-appear {
+  from { opacity:0; transform:translateY(16px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+ 
+.skeleton {
+  background: linear-gradient(90deg, var(--color-surface2) 25%, var(--color-border) 50%, var(--color-surface2) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-pulse 1.4s ease infinite;
+  border-radius: var(--radius-sm);
+}
+@keyframes skeleton-pulse {
+  from { background-position: 200% 0; }
+  to   { background-position: -200% 0; }
+}

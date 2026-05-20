@@ -5,6 +5,7 @@ import { useAuth } from "../../context/AuthContext";
 import NavBar          from "../../components/FloatingNav";
 import TradeOfferModal from "../../components/TradeOfferModal";
 import MapOverlay      from "../../components/MapOverlay";
+import PageBanner      from "../../components/PageBanner";
 import "./ItemPreview.css";
 
 function timeAgo(dateStr) {
@@ -31,18 +32,59 @@ export default function ItemPreview() {
   const [item, setItem] = useState(null);
   const [showOffer, setShowOffer] = useState(false);
   const [showMap, setShowMap] = useState(false);
-  const [startingChat, setStartingChat] = useState(false);
+  const [favorited, setFavorited] = useState(false);
+  const [favLoading, setFavLoading] = useState(false);
+
+  // Message drawer state
+  const [showMsgDrawer, setShowMsgDrawer] = useState(false);
+  const [msgText, setMsgText]             = useState("");
+  const [msgSending, setMsgSending]       = useState(false);
+  const [msgSent, setMsgSent]             = useState(false);
 
   useEffect(() => {
     apiGet("/items/get_single_item.php", { item_id: id })
       .then(d => { if (d.success) setItem(d.item); });
   }, [id]);
 
-  const handleMessage = async () => {
-    setStartingChat(true);
+  // Check if item is already favorited
+  useEffect(() => {
+    if (id && user) {
+      apiGet("/favorites/get_favs.php", { item_id: id })
+        .then(d => { if (d.success) setFavorited(d.favorited); });
+    }
+  }, [id, user]);
+
+  const toggleFav = async () => {
+    setFavLoading(true);
+    const d = await apiPost("/favorites/toggle_fav.php", { item_id: id });
+    if (d.success) setFavorited(d.favorited);
+    setFavLoading(false);
+  };
+
+  const shareItem = async () => {
+    const url = window.location.href;
+    if (navigator.share) {
+      await navigator.share({ title: item.title, url });
+    } else {
+      await navigator.clipboard.writeText(url);
+      alert("Link copied to clipboard!");
+    }
+  };
+
+  const sendQuickMsg = async () => {
+    if (!msgText.trim()) return;
+    setMsgSending(true);
     const d = await apiPost("/messages/start_convo.php", { other_user_id: item.user_id });
-    setStartingChat(false);
-    if (d.success) navigate(`/messages/${d.convo_id}`);
+    if (d.success) {
+      await apiPost("/messages/send_dm.php", { convo_id: d.convo_id, content: msgText });
+      setMsgSent(true);
+      setMsgText("");
+      setTimeout(() => { 
+        setShowMsgDrawer(false); 
+        setMsgSent(false); 
+      }, 2000);
+    }
+    setMsgSending(false);
   };
 
   if (!item) return <p className="preview-loading">Loading...</p>;
@@ -53,8 +95,8 @@ export default function ItemPreview() {
   return (
     <div className="preview-screen">
       <NavBar />
-
-      <div className="content-wrap">       {/* ADDED WRAPPER */}
+      <PageBanner />
+      <div className="content-wrap">
 
         {/* Hero image */}
         <div className="preview-hero">
@@ -77,18 +119,27 @@ export default function ItemPreview() {
             )}
           </div>
 
-          {/* Like / share / time */}
+          {/* Like / share / time (updated) */}
           <div className="preview-actions">
-            <button className="preview-action-btn" title="Like">&#9825;</button>
-            <button className="preview-action-btn" title="Share">&#x1F517;</button>
-            <span className="preview-time">&#x23F0; {timeAgo(item.created_at)}</span>
+            <button
+              className={`preview-action-btn ${favorited ? "fav-active" : ""}`}
+              onClick={toggleFav}
+              disabled={favLoading}
+              title={favorited ? "Remove from favorites" : "Add to favorites"}
+            >
+              {favorited ? "♥" : "♡"}
+            </button>
+            <button className="preview-action-btn" onClick={shareItem} title="Share item">
+              🔗
+            </button>
+            <span className="preview-time">⏰ {timeAgo(item.created_at)}</span>
           </div>
 
           {/* LOOKING FOR */}
-          {item.description && (
+          {item.swap_for && (
             <div className="preview-looking">
               <div className="preview-looking-label">&#x21C6; Looking For</div>
-              <div className="preview-looking-val">{item.description}</div>
+              <div className="preview-looking-val">{item.swap_for}</div>
             </div>
           )}
 
@@ -121,10 +172,10 @@ export default function ItemPreview() {
             </div>
           </div>
 
-          {/* Message Trader button (only if not owner) */}
+          {/* Message Trader button (only if not owner) — now opens drawer */}
           {!isOwner && (
-            <button className="btn-secondary preview-msg-btn" onClick={handleMessage} disabled={startingChat}>
-              &#x1F4AC; {startingChat ? "Opening..." : "Message Trader"}
+            <button className="btn-secondary preview-msg-btn" onClick={() => setShowMsgDrawer(true)}>
+              &#x1F4AC; Message Trader
             </button>
           )}
 
@@ -147,7 +198,54 @@ export default function ItemPreview() {
         {showMap && <MapOverlay onClose={() => setShowMap(false)} focusItem={item} />}
         {showOffer && <TradeOfferModal targetItem={item} onClose={() => setShowOffer(false)} />}
 
-      </div>                               {/* CLOSE WRAPPER */}
+        {/* Message slide-in drawer — placed OUTSIDE preview-content but INSIDE content-wrap */}
+        {showMsgDrawer && (
+          <>
+            <div className="msg-drawer-backdrop" onClick={() => setShowMsgDrawer(false)} />
+            <div className={`msg-drawer ${showMsgDrawer ? "open" : ""}`}>
+              <div className="msg-drawer-header">
+                <div>
+                  <p className="msg-drawer-label">Message</p>
+                  <p className="msg-drawer-name">{item.username}</p>
+                </div>
+                <button className="msg-drawer-close" onClick={() => setShowMsgDrawer(false)}>
+                  &times;
+                </button>
+              </div>
+              <div className="msg-drawer-body">
+                {msgSent ? (
+                  <div className="msg-drawer-sent">
+                    <span>&#x2713;</span>
+                    <p>Message sent to {item.username}!</p>
+                  </div>
+                ) : (
+                  <>
+                    <p className="msg-drawer-hint">
+                      Send a message about: <strong>{item.title}</strong>
+                    </p>
+                    <textarea
+                      className="form-field msg-drawer-textarea"
+                      placeholder="Hi! Is this still available for trade?"
+                      value={msgText}
+                      onChange={e => setMsgText(e.target.value)}
+                      rows={4}
+                      autoFocus
+                    />
+                    <button
+                      className="btn-primary"
+                      onClick={sendQuickMsg}
+                      disabled={msgSending || !msgText.trim()}
+                    >
+                      {msgSending ? "Sending..." : "Send Message"}
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          </>
+        )}
+
+      </div>
     </div>
   );
 }

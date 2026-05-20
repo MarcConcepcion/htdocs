@@ -6,13 +6,13 @@ import FloatingNav    from "../../components/FloatingNav";
 import TradeComments  from "../../components/TradeComments";
 import PostReviewModal from "../../components/PostReviewModal";
 import "./TradePanelPage.css";
+import PageBanner from "../../components/PageBanner";
 
-// Helper: readable delivery type
-const deliveryLabel = (type) => {
-  if (type === "pickup") return "Meet-up / Pick-up";
-  if (type === "cod")    return "Cash on Delivery (COD)";
-  if (type === "both")   return "Meet-up or COD";
-  return type || "Not specified";
+// Delivery options with icon + label
+const DELIVERY_ICONS = {
+  pickup: { icon: "\u{1F91D}", label: "Meet-up / Pick-up" },
+  cod:    { icon: "\u{1F4E6}", label: "Cash on Delivery (COD)" },
+  both:   { icon: "\u{1F91D}\u{1F4E6}", label: "Meet-up or COD" },
 };
 
 export default function TradePanelPage() {
@@ -49,14 +49,18 @@ export default function TradePanelPage() {
   return (
     <div className="page-with-nav tp-screen">
       <FloatingNav />
+      <PageBanner />
 
-      <div className="content-wrap">
-        <div className="tp-layout">
- 
-          {/* Offers sidebar */}
-          <div className="tp-sidebar">
-            <h2 className="tp-sidebar-title">My Trades</h2>
+      <div className="tp-layout">
+
+        {/* Left sidebar */}
+        <div className="tp-sidebar">
+          <h2 className="tp-sidebar-title">My Trades</h2>
+          <div className="tp-sidebar-list">
             {loading && <p className="tp-state">Loading...</p>}
+            {!loading && offers.length === 0 && (
+              <p className="tp-state">No trade offers yet.</p>
+            )}
             {offers.map(o => (
               <div key={o.offer_id}
                 className={`tp-offer-row ${selected?.offer_id===o.offer_id?"active":""}`}
@@ -70,87 +74,91 @@ export default function TradePanelPage() {
                   <span className="tp-offer-who">
                     {o.sender_id == user?.user_id ? `To: ${o.receiver_name}` : `From: ${o.sender_name}`}
                   </span>
-                  <span className={`tp-status-badge ${statusColor(o.status)}`}>{o.status}</span>
+                  <span className={`tp-status-badge ${statusColor(o.status)}`}>
+                    {o.status}
+                  </span>
                 </div>
               </div>
             ))}
           </div>
- 
-          {/* Detail panel */}
-          {selected ? (
-            <div className="tp-detail">
-              <div className="tp-detail-header">
-                <h3 className="tp-detail-title">{selected.offered_title} &#x21C6; {selected.requested_title}</h3>
-                <span className={`tp-status-badge ${statusColor(selected.status)}`}>{selected.status}</span>
-              </div>
- 
-              <div className="tp-parties">
-                <div className="tp-party"><span className="tp-party-label">Sender</span><span className="tp-party-name">{selected.sender_name}</span></div>
-                <div className="tp-party"><span className="tp-party-label">Receiver</span><span className="tp-party-name">{selected.receiver_name}</span></div>
-                {selected.cash_topup > 0 && <div className="tp-party"><span className="tp-party-label">Cash Top-up</span><span className="tp-party-name">₱{selected.cash_topup}</span></div>}
-                
-                {/* Delivery details for offered item */}
-                <div className="tp-party">
-                  <span className="tp-party-label">Offered Item Delivery</span>
-                  <span className="tp-party-name tp-delivery">
-                    {selected.offered_delivery === "pickup" ? "&#x1F91D;" : "&#x1F4E6;"}
-                    {" "}{deliveryLabel(selected.offered_delivery)}
-                  </span>
-                </div>
-                {/* Delivery details for requested item */}
-                <div className="tp-party">
-                  <span className="tp-party-label">Requested Item Delivery</span>
-                  <span className="tp-party-name tp-delivery">
-                    {selected.requested_delivery === "pickup" ? "&#x1F91D;" : "&#x1F4E6;"}
-                    {" "}{deliveryLabel(selected.requested_delivery)}
-                  </span>
-                </div>
-              </div>
- 
-              {/* Accept / Reject — only receiver can act, only when pending */}
-              {selected.receiver_id == user?.user_id && selected.status === "pending" && (
-                <div className="tp-actions">
-                  <button className="btn-primary tp-accept" onClick={() => respond(selected.offer_id, "accepted")}>
-                    &#10003; Accept Trade
-                  </button>
-                  <button className="btn-secondary tp-reject" onClick={() => respond(selected.offer_id, "declined")}>
-                    &#10005; Decline
-                  </button>
-                </div>
-              )}
- 
-              {/* Banner for accepted trades */}
-              {selected.status === "accepted" && (
-                <div className="tp-delivery-banner">
-                  <p className="tp-delivery-banner-title">&#x2705; Trade Accepted — Arrange Completion</p>
-                  <p className="tp-delivery-banner-sub">
-                    Coordinate with {selected.sender_id == user?.user_id ? selected.receiver_name : selected.sender_name}
-                    {" "}via the chat below to arrange{" "}
-                    {selected.offered_delivery === "cod" || selected.requested_delivery === "cod"
-                      ? "Cash on Delivery (COD) or meet-up."
-                      : "your meet-up location and time."}
-                  </p>
-                </div>
-              )}
- 
-              {/* Leave review after accepted */}
-              {selected.status === "accepted" && (
-                <button className="btn-secondary tp-review-btn" onClick={() => setShowReview(true)}>
-                  &#9733; Leave a Review
-                </button>
-              )}
- 
-              {/* Comment thread */}
-              <TradeComments offerId={selected.offer_id} />
-            </div>
-          ) : (
-            <div className="tp-empty">
-              <p>Select a trade offer from the list to view details.</p>
-            </div>
-          )}
         </div>
+
+        {/* Right detail panel */}
+        {selected ? (
+          <div className="tp-detail">
+            <div className="tp-detail-header">
+              <h3 className="tp-detail-title">{selected.offered_title} &#x21C6; {selected.requested_title}</h3>
+              <span className={`tp-status-badge ${statusColor(selected.status)}`}>{selected.status}</span>
+            </div>
+
+            <div className="tp-parties">
+              <div className="tp-party"><span className="tp-party-label">Sender</span><span className="tp-party-name">{selected.sender_name}</span></div>
+              <div className="tp-party"><span className="tp-party-label">Receiver</span><span className="tp-party-name">{selected.receiver_name}</span></div>
+              {selected.cash_topup > 0 && <div className="tp-party"><span className="tp-party-label">Cash Top-up</span><span className="tp-party-name">₱{selected.cash_topup}</span></div>}
+
+              {/* Delivery details for offered item */}
+              <div className="tp-party">
+                <span className="tp-party-label">Offered Item Delivery</span>
+                <span className="tp-party-name">
+                  {DELIVERY_ICONS[selected.offered_delivery]?.icon || "\u2753"}{" "}
+                  {DELIVERY_ICONS[selected.offered_delivery]?.label || "Not specified"}
+                </span>
+              </div>
+              {/* Delivery details for requested item */}
+              <div className="tp-party">
+                <span className="tp-party-label">Requested Item Delivery</span>
+                <span className="tp-party-name">
+                  {DELIVERY_ICONS[selected.requested_delivery]?.icon || "\u2753"}{" "}
+                  {DELIVERY_ICONS[selected.requested_delivery]?.label || "Not specified"}
+                </span>
+              </div>
+            </div>
+
+            {/* Accept / Reject — only receiver can act, only when pending */}
+            {selected.receiver_id == user?.user_id && selected.status === "pending" && (
+              <div className="tp-actions">
+                <button className="btn-primary tp-accept" onClick={() => respond(selected.offer_id, "accepted")}>
+                  &#10003; Accept Trade
+                </button>
+                <button className="btn-secondary tp-reject" onClick={() => respond(selected.offer_id, "declined")}>
+                  &#10005; Decline
+                </button>
+              </div>
+            )}
+
+            {/* Banner for accepted trades */}
+            {selected.status === "accepted" && (
+              <div className="tp-delivery-banner">
+                <p className="tp-delivery-banner-title">&#x2705; Trade Accepted — Arrange Completion</p>
+                <p className="tp-delivery-banner-sub">
+                  Coordinate with {selected.sender_id == user?.user_id ? selected.receiver_name : selected.sender_name}
+                  {" "}via the chat below to arrange{" "}
+                  {selected.offered_delivery === "cod" || selected.requested_delivery === "cod"
+                    ? "Cash on Delivery (COD) or meet-up."
+                    : "your meet-up location and time."}
+                </p>
+              </div>
+            )}
+
+            {/* Leave review after accepted */}
+            {selected.status === "accepted" && (
+              <button className="btn-secondary tp-review-btn" onClick={() => setShowReview(true)}>
+                &#9733; Leave a Review
+              </button>
+            )}
+
+            {/* Comment thread */}
+            <TradeComments offerId={selected.offer_id} />
+          </div>
+        ) : (
+          <div className="tp-empty">
+            <span className="tp-empty-icon">&#x21C6;</span>
+            <p>Select a trade offer from the list to view details.</p>
+          </div>
+        )}
+
       </div>
- 
+
       {showReview && selected && (
         <PostReviewModal
           revieweeId={selected.sender_id == user?.user_id ? selected.receiver_id : selected.sender_id}
