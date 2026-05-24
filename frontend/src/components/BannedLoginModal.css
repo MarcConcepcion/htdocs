@@ -1,0 +1,39 @@
+.banned-modal-overlay {
+  position:        fixed; inset:0;
+  z-index:         var(--z-modal);
+  background:      rgba(15,23,42,0.75);
+  backdrop-filter: blur(8px);
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  padding:         var(--space-md);
+  animation:       fade-in 0.2s ease;
+}
+@keyframes fade-in { from{opacity:0} to{opacity:1} }
+ 
+.banned-modal-card {
+  background:     var(--color-surface);
+  border:         2px solid #DC2626;
+  border-radius:  var(--radius-lg);
+  padding:        var(--space-xl);
+  max-width:      420px; width:100%;
+  display:        flex; flex-direction:column;
+  align-items:    center; gap:var(--space-md);
+  text-align:     center;
+  box-shadow:     0 24px 80px rgba(220,38,38,0.25);
+  animation:      card-in 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes card-in {
+  from{opacity:0;transform:scale(0.85) translateY(-20px)}
+  to  {opacity:1;transform:scale(1) translateY(0)}
+}
+.banned-modal-icon  { font-size:3.5rem; }
+.banned-modal-title { font-size:1.3rem; font-weight:800; color:#991B1B; }
+.banned-modal-msg   { font-size:0.9rem; color:var(--color-navy); line-height:1.6; }
+.banned-modal-sub   { font-size:0.82rem; color:var(--color-muted); line-height:1.5; }
+.banned-modal-actions { width:100%; }
+.banned-modal-btn   {
+  background:    #DC2626 !important;
+  box-shadow:    0 4px 14px rgba(220,38,38,0.35) !important;
+}
+.banned-modal-btn:hover { background:#B91C1C !important; }

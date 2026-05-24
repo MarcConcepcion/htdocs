@@ -1,0 +1,53 @@
+.page-banner {
+  position:   relative;          /* ← was: relative or static */
+  top:        0;
+  left:       0;
+  right:      0;
+  height:     64px;
+  z-index:    calc(var(--z-nav) + 1);  /* above FloatingNav */
+  background: linear-gradient(135deg, #065F46 0%, #059669 50%, #10B981 100%);
+  background-size: 200% 100%;
+  animation:  banner-shimmer 8s ease infinite;
+  overflow:   hidden;
+}
+@keyframes banner-shimmer {
+  0%  {background-position:0% 50%}
+  50% {background-position:100% 50%}
+  100%{background-position:0% 50%}
+}
+.page-banner-bg {
+  position: absolute; inset: 0; opacity: 0.35;
+  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.08'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/svg%3E");
+}
+.page-banner-content {
+  position:        relative; z-index:1; height:100%;
+  display:         flex; align-items:center;
+  justify-content: space-between;
+  padding:         0 var(--space-lg);
+}
+.page-banner-brand  { display:flex; align-items:center; gap:10px; cursor:pointer; }
+.page-banner-name   { font-size:1.1rem; font-weight:800; color:#fff; display:block; line-height:1; }
+.page-banner-tag    { font-size:0.65rem; color:rgba(255,255,255,0.75); display:block; margin-top:2px; }
+.page-banner-user   { font-size:0.85rem; color:rgba(255,255,255,0.9); }
+.page-banner-user strong { color:#fff; }
+
+.page-banner-name {
+  font-size:   1.1rem;
+  font-weight: 800;
+  color:       #fff;
+  display:     block;
+  line-height: 1;
+}
+.page-banner-tag {
+  font-size:  0.65rem;
+  color:      rgba(255,255,255,0.75);
+  display:    block;
+  margin-top: 2px;
+}
+.page-banner-user { display:flex; align-items:center; gap:10px; }
+.page-banner-greeting { font-size:0.85rem; color:rgba(255,255,255,0.9); }
+.page-banner-greeting strong { color:#fff; }
+ 
+/* To use a real banner image, add the image file to public/ and change:
+   .page-banner-bg { background-image: url("/banner.jpg"); background-size: cover; background-position: center; }
+   .page-banner { background: none; } */
